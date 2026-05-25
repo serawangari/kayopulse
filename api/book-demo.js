@@ -75,6 +75,7 @@ module.exports = async (req, res) => {
   }
 
   try {
+    // Send email to internal team
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -95,6 +96,66 @@ module.exports = async (req, res) => {
     if (!response.ok) {
       console.error('Resend API error:', result);
       return res.status(500).json({ error: 'Email delivery failed', details: result });
+    }
+
+    // Send confirmation email to client
+    const confirmationHtml = `
+  <div style="font-family: Helvetica Neue, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #080d10; color: #e8ede9; border-radius: 12px; overflow: hidden;">
+    <div style="background: linear-gradient(135deg, #0e2a1e 0%, #0a1a28 100%); padding: 32px 36px 24px; border-bottom: 1px solid #1e3028;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div style="width:8px;height:8px;background:#2ecc8a;border-radius:50%;"></div>
+        <span style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#2ecc8a;font-weight:600">KAYO PULSE</span>
+      </div>
+      <h1 style="font-size:22px;font-weight:700;color:#e8ede9;margin:0 0 4px;">You're on the list!</h1>
+      <p style="color:#5a736a;font-size:13px;margin:0;">We've received your request</p>
+    </div>
+    <div style="padding: 28px 36px;">
+      <p style="color:#e8ede9;font-size:14px;line-height:1.8;margin:0 0 16px;">Hi ${name},</p>
+      <p style="color:#b3bfbb;font-size:14px;line-height:1.8;margin:0 0 16px;">Thank you for your interest in Kayo Pulse! We've received your ${isDemo ? 'demo request' : 'partnership enquiry'} and appreciate you reaching out.</p>
+      <p style="color:#b3bfbb;font-size:14px;line-height:1.8;margin:0 0 16px;">Our team will review your information and get back to you within 24 hours. In the meantime, if you have any questions, feel free to reply to this email.</p>
+      <div style="background:#0a1510;padding:16px;border-left:3px solid #2ecc8a;margin:20px 0;border-radius:4px;">
+        <p style="color:#2ecc8a;font-size:12px;margin:0;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;">Request Details</p>
+        <table style="width:100%;margin-top:12px;border-collapse:collapse;">
+          <tr>
+            <td style="color:#5a736a;font-size:12px;padding:6px 0;">Email:</td>
+            <td style="color:#e8ede9;font-size:12px;padding:6px 0;font-weight:500;">${email}</td>
+          </tr>
+          ${company ? `<tr>
+            <td style="color:#5a736a;font-size:12px;padding:6px 0;">Company:</td>
+            <td style="color:#e8ede9;font-size:12px;padding:6px 0;font-weight:500;">${company}</td>
+          </tr>` : ''}
+          ${role ? `<tr>
+            <td style="color:#5a736a;font-size:12px;padding:6px 0;">Role:</td>
+            <td style="color:#e8ede9;font-size:12px;padding:6px 0;font-weight:500;">${role}</td>
+          </tr>` : ''}
+        </table>
+      </div>
+    </div>
+    <div style="background:#0a1510;padding:16px 36px;border-top:1px solid #1e2a24;">
+      <p style="color:#3d5c4a;font-size:11px;margin:0;">Best regards,<br/>The Kayo Pulse Team</p>
+    </div>
+  </div>`;
+
+    const confirmResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Kayo Pulse Platform <noreply@kayopulse.com>',
+        to: [email],
+        subject: `We've received your ${isDemo ? 'demo request' : 'partnership enquiry'}`,
+        html: confirmationHtml,
+      }),
+    });
+
+    const confirmResult = await confirmResponse.json();
+
+    if (!confirmResponse.ok) {
+      console.error('Resend API error (confirmation):', confirmResult);
+      // Don't fail the entire request if confirmation email fails
+      console.warn('Confirmation email failed but internal email succeeded');
     }
 
     return res.status(200).json({ success: true, id: result.id });
