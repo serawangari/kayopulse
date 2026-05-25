@@ -1,3 +1,5 @@
+const { Resend } = require('resend');
+
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -71,12 +73,9 @@ exports.handler = async (event) => {
     </div>
   </div>`;
 
-  // Use Resend API — works with just a fetch, no SDK needed
-  // Falls back gracefully if no API key is set (logs submission instead)
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
   if (!RESEND_API_KEY) {
-    // No API key set — log and return success anyway (useful during anonymous deploy)
     console.log('DEMO SUBMISSION (no email API key set):', { name, email, company, role, message, type });
     return {
       statusCode: 200,
@@ -89,31 +88,24 @@ exports.handler = async (event) => {
     };
   }
 
+  const resend = new Resend(RESEND_API_KEY);
+
   try {
     // Send email to internal team
-    const internalRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Kayo Pulse Platform <noreply@kayopulse.com>',
-        to: ['information@kayopulse.com'],
-        reply_to: email,
-        subject,
-        html: htmlContent,
-      }),
+    const internalResult = await resend.emails.send({
+      from: 'Kayo Pulse Platform <noreply@kayopulse.com>',
+      to: 'information@kayopulse.com',
+      replyTo: email,
+      subject,
+      html: htmlContent,
     });
 
-    const internalResult = await internalRes.json();
-
-    if (!internalRes.ok) {
-      console.error('Resend API error (internal):', internalResult);
+    if (internalResult.error) {
+      console.error('Resend API error (internal):', internalResult.error);
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'Email delivery failed', details: internalResult })
+        body: JSON.stringify({ error: 'Email delivery failed', details: internalResult.error })
       };
     }
 
@@ -155,32 +147,22 @@ exports.handler = async (event) => {
     </div>
   </div>`;
 
-    const confirmRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Kayo Pulse Platform <noreply@kayopulse.com>',
-        to: [email],
-        subject: `We've received your ${isDemo ? 'demo request' : 'partnership enquiry'}`,
-        html: confirmationHtml,
-      }),
+    const confirmResult = await resend.emails.send({
+      from: 'Kayo Pulse Platform <noreply@kayopulse.com>',
+      to: email,
+      subject: `We've received your ${isDemo ? 'demo request' : 'partnership enquiry'}`,
+      html: confirmationHtml,
     });
 
-    const confirmResult = await confirmRes.json();
-
-    if (!confirmRes.ok) {
-      console.error('Resend API error (confirmation):', confirmResult);
-      // Don't fail the entire request if confirmation email fails
+    if (confirmResult.error) {
+      console.error('Resend API error (confirmation):', confirmResult.error);
       console.warn('Confirmation email failed but internal email succeeded');
     }
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ success: true, id: internalResult.id })
+      body: JSON.stringify({ success: true, id: internalResult.data.id })
     };
   } catch (err) {
     console.error('Function error:', err);

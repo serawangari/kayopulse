@@ -1,3 +1,5 @@
+const { Resend } = require('resend');
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -74,28 +76,21 @@ module.exports = async (req, res) => {
     });
   }
 
+  const resend = new Resend(resendApiKey);
+
   try {
     // Send email to internal team
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Kayo Pulse Platform <noreply@kayopulse.com>',
-        to: ['information@kayopulse.com'],
-        reply_to: email,
-        subject,
-        html: htmlContent,
-      }),
+    const internalResult = await resend.emails.send({
+      from: 'Kayo Pulse Platform <noreply@kayopulse.com>',
+      to: 'information@kayopulse.com',
+      replyTo: email,
+      subject,
+      html: htmlContent,
     });
 
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error('Resend API error:', result);
-      return res.status(500).json({ error: 'Email delivery failed', details: result });
+    if (internalResult.error) {
+      console.error('Resend API error (internal):', internalResult.error);
+      return res.status(500).json({ error: 'Email delivery failed', details: internalResult.error });
     }
 
     // Send confirmation email to client
@@ -136,29 +131,19 @@ module.exports = async (req, res) => {
     </div>
   </div>`;
 
-    const confirmResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Kayo Pulse Platform <noreply@kayopulse.com>',
-        to: [email],
-        subject: `We've received your ${isDemo ? 'demo request' : 'partnership enquiry'}`,
-        html: confirmationHtml,
-      }),
+    const confirmResult = await resend.emails.send({
+      from: 'Kayo Pulse Platform <noreply@kayopulse.com>',
+      to: email,
+      subject: `We've received your ${isDemo ? 'demo request' : 'partnership enquiry'}`,
+      html: confirmationHtml,
     });
 
-    const confirmResult = await confirmResponse.json();
-
-    if (!confirmResponse.ok) {
-      console.error('Resend API error (confirmation):', confirmResult);
-      // Don't fail the entire request if confirmation email fails
+    if (confirmResult.error) {
+      console.error('Resend API error (confirmation):', confirmResult.error);
       console.warn('Confirmation email failed but internal email succeeded');
     }
 
-    return res.status(200).json({ success: true, id: result.id });
+    return res.status(200).json({ success: true, id: internalResult.data.id });
   } catch (error) {
     console.error('Function error:', error);
     return res.status(500).json({ error: 'Internal server error' });
