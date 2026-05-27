@@ -66,6 +66,7 @@ module.exports = async (req, res) => {
   </div>`;
 
   const resendApiKey = process.env.RESEND_API_KEY;
+  console.log('[book-demo] incoming', { name, email, company, role, messageProvided: Boolean(message), type, hasApiKey: Boolean(resendApiKey) });
 
   if (!resendApiKey) {
     console.log('DEMO SUBMISSION (no email API key set):', { name, email, company, role, message, type });
@@ -88,10 +89,12 @@ module.exports = async (req, res) => {
       html: htmlContent,
     });
 
-    if (internalResult.error) {
-      console.error('Resend API error (internal):', internalResult.error);
-      return res.status(500).json({ error: 'Email delivery failed', details: internalResult.error });
+    if (internalResult?.error) {
+      console.error('[book-demo] Resend API error (internal)', internalResult.error);
+      return res.status(500).json({ error: 'Internal email delivery failed', details: internalResult.error });
     }
+
+    console.log('[book-demo] internal send ok', { id: internalResult?.data?.id });
 
     // Send confirmation email to client
     const confirmationHtml = `
@@ -138,12 +141,27 @@ module.exports = async (req, res) => {
       html: confirmationHtml,
     });
 
-    if (confirmResult.error) {
-      console.error('Resend API error (confirmation):', confirmResult.error);
-      console.warn('Confirmation email failed but internal email succeeded');
+    if (confirmResult?.error) {
+      console.error('[book-demo] Resend API error (confirmation)', confirmResult.error);
+      return res.status(500).json({
+        error: 'Confirmation email delivery failed',
+        details: confirmResult.error,
+        internalEmailId: internalResult?.data?.id
+      });
     }
 
-    return res.status(200).json({ success: true, id: internalResult.data.id });
+    console.log('[book-demo] confirmation send ok', { id: confirmResult?.data?.id, to: email });
+
+    if (!confirmResult?.data?.id) {
+      console.error('[book-demo] confirmation send returned no data.id', confirmResult);
+      return res.status(500).json({
+        error: 'Confirmation email delivery failed (missing id)',
+        details: confirmResult,
+        internalEmailId: internalResult?.data?.id
+      });
+    }
+
+    return res.status(200).json({ success: true, id: internalResult.data.id, confirmationId: confirmResult.data.id });
   } catch (error) {
     console.error('Function error:', error);
     return res.status(500).json({ error: 'Internal server error' });
