@@ -69,11 +69,11 @@ module.exports = async (req, res) => {
   console.log('[book-demo] incoming', { name, email, company, role, messageProvided: Boolean(message), type, hasApiKey: Boolean(resendApiKey) });
 
   if (!resendApiKey) {
-    console.log('DEMO SUBMISSION (no email API key set):', { name, email, company, role, message, type });
-    return res.status(200).json({
-      success: true,
-      message: 'Submission received. Email delivery requires RESEND_API_KEY environment variable.',
-      data: { name, email, company }
+    console.error('[book-demo] RESEND_API_KEY not set; cannot send emails', { type, name, email, company, role });
+    return res.status(500).json({
+      success: false,
+      error: 'Email delivery not configured',
+      details: 'Missing RESEND_API_KEY environment variable'
     });
   }
 
