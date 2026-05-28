@@ -99,6 +99,35 @@ nav{
 }
 .nav-cta:hover{background:var(--accent);box-shadow:0 0 24px rgba(46,204,138,0.3)}
 
+.nav-mobile-footer{display:none;}
+
+.nav-menu-toggle{
+  display:none;
+  align-items:center;
+  justify-content:center;
+  width:46px;
+  height:46px;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:14px;
+  background:rgba(255,255,255,0.05);
+  color:var(--text2);
+  cursor:pointer;
+  transition:background 0.2s,border-color 0.2s,transform 0.2s;
+}
+.nav-menu-toggle:hover{background:rgba(255,255,255,0.12);}
+.nav-menu-toggle span{
+  display:block;
+  width:18px;
+  height:2px;
+  border-radius:999px;
+  background:currentColor;
+  transition:transform 0.2s,opacity 0.2s;
+}
+.nav-menu-toggle span:nth-child(2){margin:6px 0;}
+nav.menu-open .nav-menu-toggle span:nth-child(1){transform:translateY(8px) rotate(45deg);}
+nav.menu-open .nav-menu-toggle span:nth-child(2){opacity:0;}
+nav.menu-open .nav-menu-toggle span:nth-child(3){transform:translateY(-8px) rotate(-45deg);}
+
 /* ── NAV DROPDOWNS ── */
 .nav-dd{position:relative;display:flex;align-items:center}
 .nav-dd-toggle{display:flex;align-items:center;color:var(--text2);font-size:13.5px;font-weight:500;text-decoration:none;letter-spacing:0.02em;transition:color 0.2s;gap:8px}
@@ -514,6 +543,18 @@ footer{background:var(--bg1);border-top:1px solid var(--border);padding:60px 5% 
   .footer-top{grid-template-columns:1fr 1fr}
   .nav-links{display:none}
   .form-row{grid-template-columns:1fr}
+  .nav-menu-toggle{display:flex}
+  .nav-actions{display:none}
+  nav.menu-open .nav-links{display:flex}
+  .nav-links{position:absolute;top:68px;right:5%;left:5%;flex-direction:column;gap:8px;background:rgba(6,12,14,0.96);border:1px solid var(--border);border-radius:18px;padding:18px;backdrop-filter:blur(22px);z-index:210;box-shadow:0 34px 80px rgba(0,0,0,0.24);}
+  .nav-links .nav-dd{flex-direction:column;align-items:flex-start}
+  .nav-links .nav-dd-toggle{width:100%;padding:14px 14px;border-radius:14px;background:rgba(255,255,255,0.04);}
+  .nav-links .nav-dd-menu{position:relative;top:0;left:0;min-width:auto;background:transparent;border:none;box-shadow:none;padding:0;margin-top:10px;display:none;}
+  .nav-links .nav-dd.open .nav-dd-menu{display:block}
+  .nav-links .nav-dd-menu a{padding:10px 14px;border-radius:12px;}
+  .nav-mobile-footer{display:flex;flex-direction:column;gap:14px;border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;margin-top:8px;}
+  .nav-mobile-footer .theme-toggle{width:100%;justify-content:center;}
+  .nav-mobile-footer .nav-cta{width:100%;text-align:center;}
 }
 @media(max-width:600px){
   .stats-grid{grid-template-columns:1fr 1fr}
@@ -765,6 +806,11 @@ input[type=range]::-webkit-slider-thumb{box-shadow:0 0 10px rgba(71,106,88,0.22)
     <img class="nav-logo-mark nav-logo-mark-dark" src="kayopulsewhitetext.png" alt="Kayo Pulse" style="background:transparent;display:none">
     <span>Kayo Pulse</span>
   </a>
+  <button class="nav-menu-toggle" id="nav-menu-toggle" aria-label="Open navigation menu" aria-expanded="false" type="button">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
   <div class="nav-links">
     <div class="nav-dd" data-dd="platform">
       <a href="#" class="nav-dd-toggle" data-dd-toggle="platform" onclick="return false">Platform</a>
@@ -807,6 +853,11 @@ input[type=range]::-webkit-slider-thumb{box-shadow:0 0 10px rgba(71,106,88,0.22)
       </div>
     </div>
 
+    <div class="nav-mobile-footer">
+      <button class="theme-toggle" type="button" onclick="toggleTheme()">Dark Mode</button>
+      <a href="#" class="nav-cta" onclick="openDemoModal();return false">Book a Demo</a>
+    </div>
+
   </div>
 
   <div class="nav-actions">
@@ -828,11 +879,7 @@ input[type=range]::-webkit-slider-thumb{box-shadow:0 0 10px rgba(71,106,88,0.22)
       Earth Observation · Enterprise Intelligence · Audit Ready
     </div>
     <h1>Geospatial Intelligence<br>for a <span class="grad-text">Sustainable Planet.</span></h1>
-    <p class="hero-sub">Monitor crops, quantify carbon, verify supply chains, and comply with global regulations using one geospatial intelligence platform.</p>
-    <div class="verify-badge">
-      <div class="verify-icon"></div>
-      <span>Every hectare, every harvest, every carbon credit is <strong>verified from space.</strong></span>
-    </div>
+    <p class="hero-sub">EO-powered traceability for carbon projects, EUDR compliance, and ESG infrastructure, built by Africa, for Africa.</p>
     <div class="hero-btns">
       <a href="#" class="btn-primary" onclick="openDemoModal();return false">Request Enterprise Access</a>
       <button class="btn-secondary">
@@ -1095,17 +1142,32 @@ function toggleNavDD(key){
 }
 setupNavDropdowns();
 
+const navElement=document.querySelector('nav');
+const navToggle=document.getElementById('nav-menu-toggle');
+if(navToggle && navElement){
+  navToggle.addEventListener('click',e=>{
+    e.stopPropagation();
+    const isOpen=navElement.classList.toggle('menu-open');
+    navToggle.setAttribute('aria-expanded',isOpen?'true':'false');
+  });
+  document.addEventListener('click',e=>{
+    if(navElement.classList.contains('menu-open') && !navElement.contains(e.target)){
+      navElement.classList.remove('menu-open');
+      navToggle.setAttribute('aria-expanded','false');
+    }
+  });
+}
+
 const THEME_KEY='kayopulse-theme';
 
 const HERO_IMAGES=['background.webp','earththumbprint.jpg'];
 function applyTheme(theme){
   document.documentElement.setAttribute('data-theme',theme);
-  const toggle=document.getElementById('theme-toggle');
-  if(toggle){
-    const nextLabel=theme==='dark'?'Light Mode':'Dark Mode';
+  const nextLabel=theme==='dark'?'Light Mode':'Dark Mode';
+  document.querySelectorAll('.theme-toggle').forEach(toggle=>{
     toggle.textContent=nextLabel;
     toggle.setAttribute('aria-label','Switch to '+nextLabel.toLowerCase());
-  }
+  });
 }
 function initTheme(){
   const saved=localStorage.getItem(THEME_KEY);
