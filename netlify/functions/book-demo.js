@@ -73,16 +73,17 @@ exports.handler = async (event) => {
     </div>
   </div>`;
 
-  const RESEND_API_KEY = process.env.RESEND_API_KEY;
+  const RESEND_API_KEY = process.env.RESEND_API_KEY || process.env.RESEND_KEY;
+  const envKeyName = process.env.RESEND_API_KEY ? 'RESEND_API_KEY' : process.env.RESEND_KEY ? 'RESEND_KEY' : 'none';
 
   if (!RESEND_API_KEY) {
-    console.log('DEMO SUBMISSION (no email API key set):', { name, email, company, role, message, type });
+    console.log('DEMO SUBMISSION (no email API key set):', { name, email, company, role, message, type, envKeyName });
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
-        message: 'Submission received. Email delivery requires RESEND_API_KEY environment variable.',
+        message: 'Submission received. Email delivery requires RESEND_API_KEY or RESEND_KEY environment variable.',
         data: { name, email, company }
       })
     };

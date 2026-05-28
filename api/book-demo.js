@@ -65,15 +65,15 @@ module.exports = async (req, res) => {
     </div>
   </div>`;
 
-  const resendApiKey = process.env.RESEND_API_KEY;
-  console.log('[book-demo] incoming', { name, email, company, role, messageProvided: Boolean(message), type, hasApiKey: Boolean(resendApiKey) });
+  const resendApiKey = process.env.RESEND_API_KEY || process.env.RESEND_KEY;
+  console.log('[book-demo] incoming', { name, email, company, role, messageProvided: Boolean(message), type, hasApiKey: Boolean(resendApiKey), envKey: process.env.RESEND_API_KEY ? 'RESEND_API_KEY' : process.env.RESEND_KEY ? 'RESEND_KEY' : 'none' });
 
   if (!resendApiKey) {
-    console.error('[book-demo] RESEND_API_KEY not set; cannot send emails', { type, name, email, company, role });
+    console.error('[book-demo] RESEND_API_KEY/RESEND_KEY not set; cannot send emails', { type, name, email, company, role });
     return res.status(500).json({
       success: false,
       error: 'Email delivery not configured',
-      details: 'Missing RESEND_API_KEY environment variable'
+      details: 'Missing RESEND_API_KEY or RESEND_KEY environment variable'
     });
   }
 
