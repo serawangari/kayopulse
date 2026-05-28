@@ -851,7 +851,7 @@ input[type=range]::-webkit-slider-thumb{box-shadow:0 0 10px rgba(71,106,88,0.22)
         <div class="dash-title">KAYO PULSE — GEOSPATIAL INTELLIGENCE CONSOLE · kayopulse.com</div>
       </div>
       <div class="dash-tabs">
-        <div class="dash-tab active" onclick="switchTab(this,'agri')">Agriculture</div>
+        <div class="dash-tab active" onclick="switchTab(this,'esg')">ESG Monitoring</div>
         <div class="dash-tab" onclick="switchTab(this,'carbon')">Carbon</div>
         <div class="dash-tab" onclick="switchTab(this,'trace')">Traceability</div>
       </div>
@@ -1025,7 +1025,7 @@ input[type=range]::-webkit-slider-thumb{box-shadow:0 0 10px rgba(71,106,88,0.22)
     <div class="footer-top">
       <div class="fbrand">
         <h4>KAYO PULSE</h4>
-        <p>Earth Observation infrastructure for Agriculture, Carbon, and Traceability — powering the next generation of geospatial intelligence from <a href="https://kayopulse.com" style="color:var(--green);text-decoration:none">kayopulse.com</a>.</p>
+        <p>Earth Observation infrastructure for ESG Monitoring, Carbon, and Traceability — powering the next generation of geospatial intelligence from <a href="https://kayopulse.com" style="color:var(--green);text-decoration:none">kayopulse.com</a>.</p>
         <div class="newsletter">
           <input type="email" id="nl-email" placeholder="your@company.com">
           <button onclick="subscribeNewsletter()">Subscribe to Intelligence Briefings →</button>
@@ -1034,7 +1034,7 @@ input[type=range]::-webkit-slider-thumb{box-shadow:0 0 10px rgba(71,106,88,0.22)
       </div>
       <div class="fcol">
         <h5>Platform</h5>
-        <a href="#">Agriculture Suite</a>
+        <a href="#">ESG Monitoring Suite</a>
         <a href="#">Carbon Engine</a>
         <a href="#">Traceability Hub</a>
         <a href="#">API Access</a>
@@ -1201,11 +1201,11 @@ function subscribeNewsletter(){
 
 // ── DASHBOARD TABS ──
 const tabs={
-  agri:{
-    m1:{l:'CROP HEALTH SCORE',v:'82.4',c:'g',w:'82%',d:'↑ 3.2% vs last season'},
-    m2:{l:'WATER STRESS INDEX',v:'0.31',c:'b',w:'31%',d:'Low — optimal irrigation'},
-    m3:{l:'YIELD FORECAST',v:'97.1',c:'g',w:'97%',d:'↑ EUDR Ready'},
-    fl:[{k:'NDVI INDEX',v:'0.82'},{k:'WATER STRESS',v:'0.31'},{k:'BIOMASS EST.',v:'+8.4%'}]
+  esg:{
+    m1:{l:'ESG COMPLIANCE SCORE',v:'92.8',c:'g',w:'92%',d:'↑ 5.2% from baseline'},
+    m2:{l:'SUSTAINABILITY INDEX',v:'8.7/10',c:'b',w:'87%',d:'Sector-leading performance'},
+    m3:{l:'STAKEHOLDER SENTIMENT',v:'94.3',c:'g',w:'94%',d:'✓ Strong engagement'},
+    fl:[{k:'ESG RATING',v:'A+'},{k:'IMPACT SCORE',v:'8.7'},{k:'DISCLOSURE',v:'FULL'}]
   },
   carbon:{
     m1:{l:'CARBON SEQUESTERED',v:'14.2k',c:'b',w:'68%',d:'↑ 14% this quarter'},
